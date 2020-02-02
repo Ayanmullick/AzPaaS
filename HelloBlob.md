@@ -1,3 +1,6 @@
+<section><!--Vertical set begin comment-->
+<section data-background="https://www.scarymommy.com/wp-content/uploads/2014/10/you-your-wall-street-boyfriend-24-hours-0.jpg" data-markdown>
+  
 ```ps
 #Create subscription
 New-AzResourceGroup -Name $($Name='HelloBlob';$Name) -Location $($Location='NorthCentralUS';$Location) -Verbose  #Create Resource Group 
