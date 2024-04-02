@@ -103,6 +103,8 @@ $Func.SiteConfig
 Get-AzFunctionAppSetting -Name Ayan -ResourceGroupName FuncRG
 Update-AzFunctionAppSetting -Name Ayan -ResourceGroupName FuncRG -AppSetting @{PSWorkerInProcConcurrencyUpperBound = '3'; FUNCTIONS_WORKER_PROCESS_COUNT = '3'} -Verbose #still didn't work
 
+#AzureWebJobsDisableHomepage   # https://dev.to/massimobonanni/azure-functions-tips-disable-the-home-page-for-a-function-app-516b #To redirect root URL
+
 Remove-AzFunctionAppSetting -ResourceGroupName FuncRG -Name Ayan -AppSettingName FUNCTIONS_WORKER_PROCESS_COUNT -Verbose
 Restart-AzFunctionApp -ResourceGroupName FuncRG -Name Ayan -Force -Verbose
 #endregion
@@ -138,4 +140,21 @@ $env:PSModulePath -split ';'
 
 Get-Module -ListAvailable
 #endregion
+
+
+#region Measure how long it takes to execute
+Measure-Command {iwr https://vmdeletionreport.azurewebsites.net/api/WithinVM}  #Took about ~20 secs for Consumption tier PowerShell 'Hello world' function cold start
+(Measure-Command {iwr https://newtest5fa.azurewebsites.net/api/HttpTrigger1?name=Ayan}).TotalSeconds   #2 Secs afterwards. For Consumption tier 'Hello world'
+(Measure-Command {$a= (iwr https://newtest5fa.azurewebsites.net/api/HttpTrigger1?name=Ayan).content}).TotalSeconds; $a  #Shows response time and output
+#endregion
+
+
+#region Identity Can use by name too
+$identity = Get-AzUserAssignedIdentity -ResourceGroupName … -Name … # retrieve the specific user assigned identity
+Connect-AzAccount -Identity -AccountId $identity.Id  #Connect-AzAccount -Identity uses the user assigned identity in an AzFunctions to connect to Azure. Set on the profile.ps1 file
+
+Connect-MgGraph -Identity -ClientId    #Using managed identity: User-assigned managed identity
+#endregion
+
+npm i -g azure-functions-core-tools@3 --unsafe-perm true   #Update azure-functions-core-tools    https://github.com/Azure/azure-functions-core-tools
 
