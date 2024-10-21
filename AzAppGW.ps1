@@ -92,3 +92,5 @@ $RedirectConfig = Get-AzApplicationGatewayRedirectConfiguration -Name HttpToHttp
 Add-AzApplicationGatewayRequestRoutingRule -Name Rule2 -RuleType Basic -HttpListener $HTTPListener -RedirectConfiguration $RedirectConfig -ApplicationGateway $AppGw -Priority 200
 Set-AzApplicationGateway -ApplicationGateway $AppGw
 #endregion
+
+#Listener, backend, settings, rules, healthprobe
