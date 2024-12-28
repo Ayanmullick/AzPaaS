@@ -102,6 +102,7 @@ $Func.SiteConfig
 
 Get-AzFunctionAppSetting -Name Ayan -ResourceGroupName FuncRG
 Update-AzFunctionAppSetting -Name Ayan -ResourceGroupName FuncRG -AppSetting @{PSWorkerInProcConcurrencyUpperBound = '3'; FUNCTIONS_WORKER_PROCESS_COUNT = '3'} -Verbose #still didn't work
+Update-AzFunctionAppSetting -Name AyanM -ResourceGroupName FuncRG -AppSetting @{"SCM_DO_BUILD_DURING_DEPLOYMENT" = "true";"ENABLE_ORYX_BUILD" = "false"} -Verbose 
 
 #AzureWebJobsDisableHomepage   # https://dev.to/massimobonanni/azure-functions-tips-disable-the-home-page-for-a-function-app-516b #To redirect root URL
 
