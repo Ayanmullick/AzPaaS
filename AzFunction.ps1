@@ -88,6 +88,11 @@ Set-AzResource -PropertyObject $properties -ResourceGroupName $RG.ResourceGroupN
 #endregion
 
 
+#FlexConsumption tier creation didn't work.
+New-AzAppServicePlan -ResourceGroupName FuncRG -Name AyanMAsp -Location eastus -Tier FlexConsumption -Linux -Verbose
+#New-AzAppServicePlan: Operation returned an invalid status code 'Unauthorized'
+
+
 #region Check settings
 $Func = Get-AzWebApp -ResourceGroupName FuncRG
 $Func.SiteConfig
