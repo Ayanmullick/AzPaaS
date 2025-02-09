@@ -51,10 +51,14 @@
             <label for="file-service">File</label>
             <input id="file-service" name="service" type="radio" value="file">
         </div>
+        <label for="progress" >File progress: <span id="progress-percent">0%</span> </label>
 
+        <progress style="height: 30px" id="progress" max="100" value="0"></progress>
         <button class="mt-2"  id="upload-file">Submit</button>
         <p class="msg-success d-none">File Has been uploaded</p>
         <p class="msg-error d-none">An Error occurred</p>
     </div>
+
 <script type="module" src="script.js"></script>
+</body>
 </html>
