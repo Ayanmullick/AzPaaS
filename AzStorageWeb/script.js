@@ -1,8 +1,5 @@
-
-//const {ShareServiceClient} = require("@azure/storage-file-share");
-//import {BlobServiceClient} from  "https://cdnjs.com/libraries/azure-storage-blob/12.15.0"
-import BlobServiceClient from 'https://cdn.jsdelivr.net/npm/@azure/storage-blob@12.26.0/+esm'
-import ShareServiceClient from 'https://cdn.jsdelivr.net/npm/@azure/storage-file-share@12.26.0/+esm'
+import {BlobServiceClient} from 'https://cdn.jsdelivr.net/npm/@azure/storage-blob@12.26.0/+esm'
+import {ShareServiceClient} from 'https://cdn.jsdelivr.net/npm/@azure/storage-file-share@12.26.0/+esm'
 
 const  uploadButton = document.getElementById("upload-file");
 let servicesRadio = document.querySelectorAll("[name='service']");
