@@ -60,7 +60,7 @@ uploadButton.addEventListener('click',function(e){
             .catch(err => {
                 console.log(err);
                 button.disabled = false;
-                showMessages('error');
+                showMessages('error',err);
             });
     }
 
@@ -98,21 +98,43 @@ function generateAccountUrl(azureInfos) {
 
 async function uploadBlobFromBrowser(containerClient, file){
     const blockBlobClient = containerClient.getBlockBlobClient(file.name);
-    return await blockBlobClient.uploadData(file);
+    const blockSize = 10 * 1024 * 1024; // 10MB
+    const fileSize = file.size;
+    const blockCount = Math.ceil(fileSize / blockSize);
+    const blockIds = [];
+    let bytesUploaded = 0;
+    let percentComplete = 0;
+    for (let i = 0; i < blockCount; i++) {
+        const start = i * blockSize;
+        const end = Math.min(start + blockSize, fileSize);
+        const chunk = file.slice(start, end);
+        const chunkSize = end - start;
+        const blockId = btoa("block-" + i.toString().padStart(6, "0"));
+        blockIds.push(blockId);
+        await blockBlobClient.stageBlock(blockId, chunk, chunkSize).then((res) => {
+            bytesUploaded += blockSize;
+            percentComplete = ((parseFloat(bytesUploaded) / parseFloat(fileSize)) * 100).toFixed(2);
+            document.getElementById('progress').value = percentComplete;
+            document.getElementById('progress-percent').innerText = percentComplete + '%';
+        });
+    }
+    return await blockBlobClient.commitBlockList(blockIds);
 }
 
 async function uploadSharedFileFromBrowser(serviceClient, file){
     const fileClient = serviceClient.rootDirectoryClient.getFileClient(file.name);
+    // await fileClient.create(fileSize); fileClient.uploadRange
     return await fileClient.uploadData(file);
 
 }
 
-function showMessages(type) {
+function showMessages(type,error = null) {
     if(type === "success") {
         document.querySelector('.msg-success').classList.remove('d-none');
         document.querySelector('.msg-error').classList.add('d-none');
     } else if(type === "error") {
         document.querySelector('.msg-success').classList.add('d-none');
         document.querySelector('.msg-error').classList.remove('d-none');
+        document.querySelector('.msg-error').innerText = error
     }
 }
