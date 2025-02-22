@@ -4,20 +4,17 @@ import {ShareServiceClient} from 'https://cdn.jsdelivr.net/npm/@azure/storage-fi
 const  uploadButton = document.getElementById("upload-file");
 let servicesRadio = document.querySelectorAll("[name='service']");
 const storageFileInput = document.getElementById("storage-file");
-const shareFileInput = document.getElementById("share-file");
 
 
 servicesRadio.forEach(function (radio) {
     radio.addEventListener('change', function (event) {
         let target = event.target;
-        let fileBlockContainer = document.getElementById('file-block-container');
-        let storageBlockContainer = document.getElementById('storage-block-container');
+        resetInputs();
+        let progressBarContainer = document.getElementById("progress-bar-container");
         if (target.id === "file-service") {
-            fileBlockContainer.style.display = 'block';
-            storageBlockContainer.style.display = 'none';
+            progressBarContainer.style.display = 'none';
         } else {
-            fileBlockContainer.style.display = 'none';
-            storageBlockContainer.style.display = 'block';
+            progressBarContainer.style.display = 'flex';
         }
     });
 });
@@ -25,12 +22,10 @@ servicesRadio.forEach(function (radio) {
 uploadButton.addEventListener('click',function(e){
     const button = e.target;
     const storageFile = storageFileInput.files[0];
-    const shareFile = shareFileInput.files[0];
     const checkedService = document.querySelector("[name='service']:checked").value;
     const [accountName,containerName,sasToken] = getServiceInputValues(checkedService);
     let uploadPromise;
-
-    if(storageFile || shareFile) {
+    if(storageFile) {
         button.disabled = true;
         const accountUrl = generateAccountUrl({
             accountName,
@@ -47,7 +42,7 @@ uploadButton.addEventListener('click',function(e){
         } else if(checkedService === 'file') {
             uploadPromise = uploadSharedFileFromBrowser(
                 serviceClient.getShareClient(containerName),
-                shareFile
+                storageFile
             )
         } else {
             return;
@@ -66,22 +61,20 @@ uploadButton.addEventListener('click',function(e){
 
 })
 
-function getServiceInputValues(checkedService) {
-    if(checkedService === 'blob') {
-
-        return [
-            document.getElementById('storage-account').value,
-            document.getElementById('storage-container-name').value,
-            document.getElementById('storage-access-key').value,
-        ];
-    }
+function getServiceInputValues() {
 
     return [
-        document.getElementById('file-account').value,
-        document.getElementById('file-share-name').value,
-        document.getElementById('file-access-key').value,
+        document.getElementById('storage-account').value,
+        document.getElementById('storage-container-name').value,
+        document.getElementById('storage-access-key').value,
     ];
 
+}
+
+function resetInputs() {
+    document.getElementById('storage-account').value = "";
+    document.getElementById('storage-container-name').value = "";
+    document.getElementById('storage-access-key').value = "";
 }
 
 function serviceFactory(serviceType,accountUrl) {
@@ -96,7 +89,7 @@ function generateAccountUrl(azureInfos) {
     return `https://${azureInfos['accountName']}.${azureInfos['serviceType']}.core.windows.net?${azureInfos['sasToken']}`;
 }
 
-async function uploadBlobFromBrowser(containerClient, file){
+async function uploadBlobFromBrowser(containerClient,file){
     const blockBlobClient = containerClient.getBlockBlobClient(file.name);
     const blockSize = 10 * 1024 * 1024; // 10MB
     const fileSize = file.size;
@@ -123,9 +116,7 @@ async function uploadBlobFromBrowser(containerClient, file){
 
 async function uploadSharedFileFromBrowser(serviceClient, file){
     const fileClient = serviceClient.rootDirectoryClient.getFileClient(file.name);
-    // await fileClient.create(fileSize); fileClient.uploadRange
     return await fileClient.uploadData(file);
-
 }
 
 function showMessages(type,error = null) {
