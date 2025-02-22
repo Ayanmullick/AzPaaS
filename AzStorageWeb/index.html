@@ -1,0 +1,57 @@
+<html>
+<head>
+    <title>Azure File Upload</title>
+    <style>.content {display: flex;flex-direction: column;align-items: center;}
+    .inputs-box {width:23%;}
+    .form-group {display: flex;}
+    .form-input {margin-left: auto;}
+    .mt-2 {margin-top: 1.5em;}
+    .msg-success {color: green;}
+    .msg-error {color: red;}
+    .d-none {display: none;}
+    .d-flex{display: flex;}
+    .progress-container {display:flex;flex-direction: column;justify-content: center;text-align: center;gap: 4px;}
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="inputs-box" id="storage-block-container">
+            <div class="mt-2 form-group">
+                <label for="storage-account">Storage Account Name</label>
+                <input class="form-input" type="text" name="storageAccount" id="storage-account" placeholder="Storage Account Name" value="">
+            </div>
+            <div class="mt-2 form-group">
+                <label for="storage-container-name">Container\Share name</label>
+                <input class="form-input"  type="text" name="containerName" id="storage-container-name" placeholder="Container\Share name" value="">
+            </div>
+            <div class="mt-2 form-group">
+                <label for="storage-access-key">SAS token</label>
+                <input class="form-input"  type="text" name="storageAccount" id="storage-access-key" placeholder="SAS token" value="">
+            </div>
+            <input class="mt-2" type="file" id="storage-file" name="storage-file"/>
+
+            <div class="d-flex mt-2">
+                <div>
+                    <label for="storage-service">Blob</label>
+                    <input id="storage-service" name="service" type="radio" value="blob" checked>
+                </div>
+                <div>
+                    <label for="file-service">File</label>
+                    <input id="file-service" name="service" type="radio" value="file">
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progress-bar-container">
+            <label class="mt-2" for="progress" >File progress: <span id="progress-percent">0%</span></label>
+            <progress style="height: 30px" id="progress" max="100" value="0"></progress>
+        </div>
+
+        <button class="mt-2"  id="upload-file">Submit</button>
+        <p class="msg-success d-none">File Has been uploaded</p>
+        <p class="msg-error d-none">An Error occurred</p>
+    </div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
