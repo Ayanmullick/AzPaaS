@@ -1,6 +1,7 @@
 #region Create a Databricks Workspace
 Register-AzResourceProvider -ProviderNamespace Microsoft.Databricks -Verbose
 
+#Currently, the New-AzDatabricksWorkspace cmdlet does not support parameters for VNet injection or disabling public IPs directly.
 #V2: Worked: The tags need to be added while creating the workspace to the resource group can inherit them and not be blocked by policy.
 $NameSuffix = ($Name, $Env, $Loc, $Sr = 'databricks', 'd', 'c', '01') -join '-' 
 $Params     = @{Location = 'CentralUS'; Verbose=$true}
