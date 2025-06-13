@@ -49,10 +49,10 @@ New-AzConsumptionBudget -ResourceGroupName $resourceGroupName -Name $budgetName 
 
 
 #region: v3  | #Start date should be the first date of the month |# Budget is valid for 1 year
-$Day1 = Get-Date -Day 1
-$BudgetParams = @{ TimeGrain = "Monthly"; Category = "Cost"; StartDate = $Day1.ToString("yyyy-MM-dd"); EndDate = $Day1.AddYears(1).ToString("yyyy-MM-dd"); Verbose = $true }
-$NotifyParams = @{ NotificationKey = "ForecastedCost"; NotificationThreshold = 80; NotificationEnabled = $true; ContactEmail = "<>"}
-New-AzConsumptionBudget -ResourceGroupName $RG.ResourceGroupName -Name ('MonthBudget-' + $NameSuffix) -Amount 300 @BudgetParams @NotifyParams
+$Day1   = Get-Date -Day 1
+$Budget = @{ TimeGrain = "Monthly"; Category = "Cost"; StartDate = $Day1.ToString("yyyy-MM-dd"); EndDate = $Day1.AddYears(1).ToString("yyyy-MM-dd")}
+$Notify = @{ NotificationKey = "ForecastedCost"; NotificationThreshold = 80; NotificationEnabled = $true; ContactEmail = "<>"; Verbose = $true }
+New-AzConsumptionBudget -ResourceGroupName $RG.ResourceGroupName -Name ('MonthBudget-' + $NameSuffix) -Amount 300 @Budget @Notify
 #endregion
 
 #endregion
