@@ -45,15 +45,15 @@ Epic
 <details open>
   <summary>Work Item type Hierarchy</summary>
 
-  <details>
+  <details open>
     <summary>Agile Process</summary>
 
-    <pre>
+```
 Epic
 └── Feature
     └── User Story
         └── Task
-    </pre>
+```
   </details>
 
 </details>
