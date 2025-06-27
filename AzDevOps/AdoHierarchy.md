@@ -38,3 +38,16 @@ Epic
   <summary>🔼 Expanded by default</summary>
   This is visible immediately on page load.
 </details>
+
+
+
+
+<details>
+  <summary>Level 1</summary>
+
+  <details>
+    <summary>Level 2</summary>
+    Deep content…
+  </details>
+
+</details>
