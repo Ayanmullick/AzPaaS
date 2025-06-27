@@ -48,12 +48,12 @@ Epic
   <details>
     <summary>Agile Process</summary>
 
-    ```
-    Epic
-    └── Feature
-        └── User Story
-            └── Task
-    ```
+    <pre>
+Epic
+└── Feature
+    └── User Story
+        └── Task
+    </pre>
   </details>
 
 </details>
