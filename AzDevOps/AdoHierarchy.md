@@ -36,13 +36,12 @@ Epic
 
 <details open>
   <summary>Azure DevOps Organizational Hierarchy</summary>
-  ```
+```
 Azure DevOps Organization
 └── Project
     └── Team
         └── Board
             └── Work Items
-
 ```
 </details>
 
