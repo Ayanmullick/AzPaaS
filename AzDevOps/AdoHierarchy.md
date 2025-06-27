@@ -53,7 +53,7 @@ Epic
 
 
 <details open>
-    <summary>CMMI Process</summary>
+    <summary>CMMI Process(Capability Maturity Model Integration)</summary>
 
 ```
 Epic
