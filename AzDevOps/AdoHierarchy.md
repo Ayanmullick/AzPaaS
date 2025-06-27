@@ -7,35 +7,9 @@ Azure DevOps Organization
 
 
 
-#Work Item type Hierarchy (Agile Process)
-Epic
-└── Feature
-    └── User Story
-        └── Task
-
-
-#Basic Process
-Epic
-└── Issue
-    └── Task
-
-
-#Scrum Process
-Epic
-└── Feature
-    └── Product Backlog Item (PBI)
-        └── Task
-
-
-#CMMI Process
-Epic
-└── Feature
-    └── Requirement
-        └── Task
-
-
 <details open>
   <summary>Azure DevOps Organizational Hierarchy</summary>
+  
 ```
 Azure DevOps Organization
 └── Project
