@@ -42,12 +42,15 @@ Epic
 
 
 
-<details>
-  <summary>Level 1</summary>
+<details open>
+  <summary>Work Item type Hierarchy</summary>
 
   <details>
-    <summary>Level 2</summary>
-    Deep content…
+    <summary>Agile Process</summary>
+Epic
+└── Feature
+    └── User Story
+        └── Task    
   </details>
 
 </details>
