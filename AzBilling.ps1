@@ -14,7 +14,7 @@ Get-AzEnrollmentAccount  #One needs to be added in the Accounts tab in the EA po
 https://azure.microsoft.com/en-in/offers/ms-azr-0003p/
 purchase payG
 
-sign up for  an enterprise subscription.  This creates your Azure profile in the back end
+#sign up for  an enterprise subscription.  This creates your Azure profile in the back end
 
 New-AzSubscription -OfferType MS-AZR-0017P -Name "Dev Team Subscription" -EnrollmentAccountObjectId <enrollmentAccountObjectId> -OwnerObjectId <userObjectId1>,<servicePrincipalObjectId>
 
