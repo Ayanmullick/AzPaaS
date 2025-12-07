@@ -52,6 +52,28 @@ New-AzCosmosDBSqlDatabase -ResourceGroupName cosmos -AccountName ztechlower -Nam
 Get-CosmosDbOffer -Context $cosmosDbContext
 
 
+#Az.Cosmosdb module blocked by:  https://github.com/Azure/azure-powershell/issues/20836
+#region
+
+$Params =    @{ResourceGroupName  = 'cosmos'; Location = 'NorthCentralUS'}
+$AccountResource = @{ResourceType= 'Microsoft.DocumentDB/databaseAccounts'; ApiVersion= '2025-05-01-preview'; Kind= 'GlobalDocumentDB'}
+
+$cosmosProps = @{databaseAccountOfferType = 'Standard'; enableFreeTier = $true ; capacityMode = 'Serverless' 
+    locations = @( @{locationName= 'NorthCentralUS'; failoverPriority= 0; isZoneRedundant= $false } )
+    consistencyPolicy = @{defaultConsistencyLevel = 'Session'; maxIntervalInSeconds = 5 ; maxStalenessPrefix = 100  }
+    publicNetworkAccess = 'Enabled'
+}
+
+New-AzResource -Name ayan @Params -PropertyObject $cosmosProps @AccountResource -Force 
+     
+New-AzCosmosDBSqlDatabase  -ResourceGroupName cosmos -AccountName ayan -Name ayan
+New-AzCosmosDBSqlContainer -ResourceGroupName $Params.ResourceGroupName -AccountName $accountName -DatabaseName 'appdb' -Name 'items' -PartitionKeyPath '/pk' -PartitionKeyKind 'Hash'
+#endregion
+
+
+
+
+
 #Script to read an Item:   https://github.com/Azure/azure-cosmos-dotnet-v3/blob/master/Microsoft.Azure.Cosmos.Samples/Usage/PowerShellRestApi/PowerShellScripts/ReadItem.ps1 #Was erroring out
 
 #region Query an item directly from Cosmosdb using master account key|  Works|   https://stackoverflow.com/a/59449703/2748772

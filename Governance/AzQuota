@@ -1,0 +1,3 @@
+$subId = (Get-AzContext).Subscription.Id
+$scope = "subscriptions/$subId/providers/Microsoft.Network/locations/northcentralus"
+Get-AzQuota -Scope $scope
