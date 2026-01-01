@@ -1,4 +1,11 @@
-﻿$resourceGroupName = "myResourceGroup"
+﻿New-AzQuota in the Az.Quota module doesn't work for Cosmos. PFB PowerShell workaround using Az.Support module.
+
+New-AzCosmosDBAccount doesn't work for 'Serverless' accounts. PFB workaround using Az.Resource module.
+
+
+
+
+$resourceGroupName = "myResourceGroup"
 $accountName = "mycosmosaccount"
 $apiKind = "Sql"
 $consistencyLevel = "BoundedStaleness"
@@ -9,7 +16,7 @@ $locations += New-AzCosmosDBLocationObject -LocationName "East US" -FailoverPrio
 $locations += New-AzCosmosDBLocationObject -LocationName "West US" -FailoverPriority 1 -IsZoneRedundant 0
 
 New-AzCosmosDBAccount `
-    -ResourceGroupName $resourceGroupName `
+    -ResourceGroupName cosmos `
     -LocationObject $locations `
     -Name $accountName `
     -ApiKind $apiKind `
@@ -51,15 +58,25 @@ New-AzCosmosDBSqlDatabase -ResourceGroupName cosmos -AccountName ztechlower -Nam
 
 Get-CosmosDbOffer -Context $cosmosDbContext
 
+#region Still thick provisions. EnableServerless doesn't work 
+
+New-AzCosmosDBAccount -ResourceGroupName cosmos -Location EastUS -Name ayan -Capabilities {EnableServerless} -EnableFreeTier $true `
+    -ApiKind GlobalDocumentDB -DefaultConsistencyLevel Session -EnableAutomaticFailover:$true -PublicNetworkAccess Enabled -MinimalTlsVersion Tls12
+    
+$Params =    @{ResourceGroupName  = 'cosmos'; Location = 'EastUS'}
+
+
+#endregion    
+
 
 #Az.Cosmosdb module blocked by:  https://github.com/Azure/azure-powershell/issues/20836
-#region
+#region -Failed in NorthCentralUS. Worked in EastUS
 
-$Params =    @{ResourceGroupName  = 'cosmos'; Location = 'NorthCentralUS'}
+$Params =    @{ResourceGroupName  = 'cosmos'; Location = 'EastUS'}
 $AccountResource = @{ResourceType= 'Microsoft.DocumentDB/databaseAccounts'; ApiVersion= '2025-05-01-preview'; Kind= 'GlobalDocumentDB'}
 
 $cosmosProps = @{databaseAccountOfferType = 'Standard'; enableFreeTier = $true ; capacityMode = 'Serverless' 
-    locations = @( @{locationName= 'NorthCentralUS'; failoverPriority= 0; isZoneRedundant= $false } )
+    locations = @( @{locationName= 'EastUS'; failoverPriority= 0; isZoneRedundant= $false } )
     consistencyPolicy = @{defaultConsistencyLevel = 'Session'; maxIntervalInSeconds = 5 ; maxStalenessPrefix = 100  }
     publicNetworkAccess = 'Enabled'
 }
@@ -67,7 +84,87 @@ $cosmosProps = @{databaseAccountOfferType = 'Standard'; enableFreeTier = $true ;
 New-AzResource -Name ayan @Params -PropertyObject $cosmosProps @AccountResource -Force 
      
 New-AzCosmosDBSqlDatabase  -ResourceGroupName cosmos -AccountName ayan -Name ayan
-New-AzCosmosDBSqlContainer -ResourceGroupName $Params.ResourceGroupName -AccountName $accountName -DatabaseName 'appdb' -Name 'items' -PartitionKeyPath '/pk' -PartitionKeyKind 'Hash'
+New-AzCosmosDBSqlContainer -ResourceGroupName cosmos -AccountName ayan -DatabaseName ayan -Name 'items' -PartitionKeyPath '/pk' -PartitionKeyKind 'Hash'
+
+$rgName,$accountName, $dbName, $containerId = 'cosmos','ayan','ayan', 'items'
+Remove-AzCosmosDBSqlContainer -ResourceGroupName $rgName -AccountName $accountName -DatabaseName $dbName -Name $containerId
+
+#endregion
+
+
+#region
+$Params =    @{ResourceGroupName  = 'cosmos'; Location = 'EastUS'}
+$AccountResource = @{ResourceType= 'Microsoft.DocumentDB/databaseAccounts'; ApiVersion= '2025-10-15'; Kind= 'GlobalDocumentDB'}
+
+$cosmosProps = @{databaseAccountOfferType = 'Standard'; enableFreeTier = $true; capacityMode = 'Serverless'
+    enableAutomaticFailover = $true; minimalTlsVersion = 'Tls12'; publicNetworkAccess = 'Enabled'
+    locations = @(  @{locationName = 'EastUS'; failoverPriority = 0; isZoneRedundant = $false }  )
+    consistencyPolicy = @{defaultConsistencyLevel = 'Session'; maxIntervalInSeconds = 5; maxStalenessPrefix = 100}
+               }
+
+New-AzResource -Name ayan @Params -PropertyObject $cosmosProps @AccountResource -Force 
+
+#endregion
+
+
+#Gets the latest API versions
+Get-AzResourceProvider -ProviderNamespace Microsoft.DocumentDB |Select -ExpandProperty ResourceTypes |
+  Where-Object ResourceTypeName -eq 'databaseAccounts' | Select -ExpandProperty ApiVersions -First 10
+
+
+
+
+
+
+#region
+Install-PSResource -Name CosmosDB #-Scope CurrentUser -Force
+
+$rgName,$accountName, $dbName, $containerId = 'cosmos','ayan','ayan', 'items'
+$cosmosDbContext = New-CosmosDbContext `
+    -Account          $accountName `
+    -Database         $dbName `
+    -ResourceGroupName $rgName `
+    -MasterKeyType    PrimaryMasterKey  # or SecondaryMasterKey if you prefer
+
+
+$volcanoUrl = 'https://raw.githubusercontent.com/Azure-Samples/azure-cosmos-db-sample-data/main/SampleData/VolcanoData.json'
+$tempFile   = Join-Path $env:TEMP 'volcano.json'
+
+Invoke-WebRequest -Uri $volcanoUrl -OutFile $tempFile
+$volcanoDocs = Get-Content -Raw -Path $tempFile | ConvertFrom-Json
+
+
+
+New-AzCosmosDBSqlContainer -ResourceGroupName $rgName -AccountName $accountName -DatabaseName $dbName -Name $containerId -PartitionKeyPath  '/Country' -PartitionKeyKind  'Hash'
+(Get-AzCosmosDBSqlContainer -ResourceGroupName $rgName -AccountName $accountName -DatabaseName $dbName -Name $containerId).Resource.PartitionKey.Paths # should show: /Country
+
+$collectionId = $containerId
+
+foreach ($doc in $volcanoDocs) {
+    # Ensure we send JSON, not a PSObject
+    $jsonBody = $doc | ConvertTo-Json -Depth 10
+
+    # Use Country as the partition key value (matches /Country path)
+    New-CosmosDbDocument `
+        -Context      $cosmosDbContext `
+        -CollectionId $collectionId `
+        -DocumentBody $jsonBody `
+        -PartitionKey $doc.Country
+}
+
+
+$query = 'SELECT VALUE COUNT(1) FROM c'
+
+$result = Get-CosmosDbDocument `
+    -Context                 $cosmosDbContext `
+    -CollectionId            $collectionId `
+    -Query                   $query `
+    -QueryEnableCrossPartition $true
+
+$remoteCount = $result[0]
+$remoteCount
+
+
 #endregion
 
 
@@ -119,3 +216,8 @@ $query=@"
   },  ]  
 } 
 "@
+
+
+
+
+Get-AzCosmosDBAccount -ResourceGroupName cosmos
