@@ -218,6 +218,10 @@ $query=@"
 "@
 
 
+#Query. Works on VSC Azure Cosmos extension
+SELECT c["Volcano Name"] AS VolcanoName,c.Country,c.Region,c.Elevation,c.Type,c["Last Known Eruption"] AS LastKnownEruption FROM c  #projection can't be edited
+
+SELECT * FROM c WHERE c.id = "4cb67ab0-ba1a-0e8a-8dfc-d48472fd5766"   #the result can be edited
 
 
 Get-AzCosmosDBAccount -ResourceGroupName cosmos
