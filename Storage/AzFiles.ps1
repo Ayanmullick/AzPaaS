@@ -39,7 +39,7 @@ Test-NetConnection -ComputerName ([System.Uri]::new($share.Context.FileEndPoint)
 
 
 #File transfer validation with OAuth
-$FileName  = 'DummyFile_' + (Get-Date -F HHms) + -join ((Get-TimeZone).Id -split '' | Where-Object { $_ -cmatch '[A-Z]' }) + '.txt'
+$FileName  = 'File ' +(Get-Date -Format 'MMddyy HHms') + (-join((GTz).Id -split' '|%{$_[0]})).ToLower()+'.txt'                         # 'File 021326 171028cst.txt'
 Set-Content -Path $FileName -Value "This is a dummy text file."                                                               # Generate a unique file name and set dummy content
 
 #$ctx  = New-AzStorageContext -StorageAccountName $storageAccount.StorageAccountName -UseConnectedAccount -Endpoint $share.Context.FileEndPoint -EnableFileBackupRequestIntent -ErrorAction Stop
