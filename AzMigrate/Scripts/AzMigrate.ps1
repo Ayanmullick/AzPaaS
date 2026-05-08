@@ -2,8 +2,8 @@
 $Solution = Get-AzMigrateSolution -MigrateProjectName "<migrate-project-name>" -ResourceGroupName "<rg-name>"
 
 <#
-Get-AzMigrateSolution -ResourceGroupName 'rg-migrate-p-c-01' -Name MetcWebapps -MigrateProjectName MetcWebapps
-Error: Get-AzMigrateSolution_Get: Solution name 'MetcWebapps' cannot be found.
+Get-AzMigrateSolution -ResourceGroupName 'rg-migrate-p-c-01' -Name '<>Webapps' -MigrateProjectName '<>Webapps'
+Error: Get-AzMigrateSolution_Get: Solution name '<>Webapps' cannot be found.
 #>
 
 # Filter to Web Apps solution

@@ -20,4 +20,4 @@ Get-AzContext -ListAvailable|? Name -match 'national'|Remove-AzContext -Verbose
 Get-AzContext -ListAvailable|? Name -match 'wfs'|Remove-AzContext -Verbose
 Get-AzContext -ListAvailable|? Name -match 'microsoft'|Remove-AzContext -Verbose
 Get-AzContext -ListAvailable|? Name -match 'hot'|Remove-AzContext -Verbose
-Get-AzContext -ListAvailable|? Account -match 'metc'|Remove-AzContext -Verbose
+Get-AzContext -ListAvailable|? Account -match '<>'|Remove-AzContext -Verbose
