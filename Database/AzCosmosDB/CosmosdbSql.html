@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- This file uses the PowerShell WebAssembly library to query Cosmos DB SQL using a read-only account key. 
+dotnet serve -d . -p 5000 -o:/index.html 
+-->
+<html lang="en">
+<head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>PSWasm Cosmos DB Query</title></head>
+<body>
+  <h1>PSWasm Cosmos DB Query</h1>
+
+  <form id="query-form">
+    <table>
+      <tr><td><label for="account-name">Account</label></td>                       <td><input id="account-name"   type="text"     value="ztech" required></td></tr>
+      <tr><td><label for="database-name">Database</label></td>                     <td><input id="database-name"  type="text"     value="Ayan" required></td></tr>
+      <tr><td><label for="container-name">Container</label></td>                   <td><input id="container-name" type="text"     value="Ayanid" required></td></tr>
+      <tr><td><label for="document-id">Document id</label></td>                    <td><input id="document-id"    type="text"     value="4cb67ab0-ba1a-0e8a-8dfc-d48472fd5766" required></td></tr>
+      <tr><td><label for="cosmos-key">Cosmos key or connection string</label></td> <td><input id="cosmos-key"     type="password" autocomplete="off" spellcheck="false" required></td></tr>
+    </table>
+    <p>
+      <button id="query-button" type="submit">Query document</button>
+      <span id="status">Runtime idle.</span>
+    </p>
+  </form>
+
+  <h2>Output</h2>
+  <pre id="output">Waiting for query.</pre>
+
+  <script type="pwsh" id="cosmos-query">
+$Dom = New-DomSession -Name CosmosQuery -Target document
+Set-DomText '#status' 'Runtime idle.'
+
+$null = Register-DomEvent -Session $Dom -Selector '#query-form' -Event Submit -PreventDefault -ScriptBlock {
+    Set-DomProperty '#query-button' Disabled $true
+    Set-DomText '#status' 'Running query.'
+    Set-DomText '#output' ''
+
+    try {
+        $AccountName,$DatabaseName,$ContainerName,$DocumentId,$Key = Get-DomValue '#account-name','#database-name','#container-name','#document-id','#cosmos-key'
+        $AccountName,$DatabaseName,$ContainerName,$DocumentId = $AccountName.Trim(),$DatabaseName.Trim(),$ContainerName.Trim(),$DocumentId.Trim()
+        $Date = Get-Date -Utc -Format 'r'
+        $ResourceLink = 'dbs/' + $DatabaseName + '/colls/' + $ContainerName
+        $Uri = 'https://' + $AccountName + '.documents.azure.com/' + $ResourceLink + '/docs'
+
+        if (-not $Key -or -not $AccountName -or -not $DatabaseName -or -not $ContainerName -or -not $DocumentId) { throw 'Missing Cosmos request value.' }
+
+        $Key = [Uri]::UnescapeDataString($Key).Trim() -replace '^["'']+|["'']+$',''
+        if ($Key -match '(?:^|;)\s*AccountKey\s*=\s*([^;]+)') { $Key = $Matches[1] }
+        $Key = [Uri]::UnescapeDataString($Key).Trim() -replace '^["'']+|["'']+$',''
+        $Key = $Key -replace '\s+',''
+        if ($Key -notmatch '^[A-Za-z0-9+/]+={0,2}$') { throw 'Cosmos key is not valid base64 after PowerShell normalization.' }
+
+        $Verb,$ResourceType,$KeyType,$TokenVer = 'post','docs','master','1.0'
+        $StringToSign = $Verb + "`n" + $ResourceType + "`n" + $ResourceLink + "`n" + $Date.ToLowerInvariant() + "`n`n"
+        $KeyBytes,$DataBytes = [Convert]::FromBase64String($Key),[Text.Encoding]::UTF8.GetBytes($StringToSign)
+        $SignatureBytes      = [System.Security.Cryptography.HMACSHA256]::HashData($KeyBytes,$DataBytes)
+        $Signature           = [Convert]::ToBase64String($SignatureBytes)
+        $Authorization       = [Uri]::EscapeDataString('type=' + $KeyType + '&ver=' + $TokenVer + '&sig=' + $Signature)
+
+        $Headers = @{
+            'x-ms-date' = $Date; 'x-ms-version' = '2018-12-31'; Authorization = $Authorization
+            'x-ms-documentdb-isquery' = 'true'; 'x-ms-documentdb-partitionkey' = ('["' + $DocumentId + '"]')
+            Accept = 'application/json'
+        }
+        $Payload = @{ query = 'SELECT TOP 1 * FROM c'; parameters = @() }
+        $Body = ConvertTo-Json -InputObject $Payload -Compress -Depth 8
+        $ContentType = 'application/query+json'
+
+        $Response = Invoke-WebRequest -Uri $Uri -Method POST -Headers $Headers -ContentType $ContentType -Body $Body -SkipHttpErrorCheck
+        if ($Response.StatusCode -ge 200 -and $Response.StatusCode -lt 300) {
+            $OutputText = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty Documents | ConvertTo-Json -Depth 16
+            Set-DomText '#output' $OutputText
+            Set-DomText '#status' 'Query complete.'
+        } else {
+            Set-DomText '#output' ('Cosmos query failed with HTTP ' + $Response.StatusCode + ' ' + $Response.StatusDescription + "`n" + $Response.Content)
+            Set-DomText '#status' 'Query failed.'
+        }
+    } catch {
+        Set-DomText '#output' $_.Message
+        Set-DomText '#status' 'Query failed.'
+    } finally {
+        Set-DomProperty '#query-button' Disabled $false
+    }
+}
+  </script>
+  <script type="module" src="https://ayanmullick.github.io/PSWasm/app.js?v=latest"></script>
+</body>
+</html>
