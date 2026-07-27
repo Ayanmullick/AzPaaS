@@ -10,7 +10,7 @@ Install-Module Az.Billing -Verbose
 Install-Module Az.Subscription -AllowPrerelease -Verbose
 
 Get-AzEnrollmentAccount  #One needs to be added in the Accounts tab in the EA portal
-Get-AzBillingAccount
+Get-AzBillingAccount |? AccountStatus -EQ 'Active'
 Get-AzBillingProfile -BillingAccountName '<>'
 
 #Purchase payG : https://azure.microsoft.com/en-in/offers/ms-azr-0003p/
