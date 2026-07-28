@@ -78,4 +78,5 @@ Get-AzConsumptionUsageDetail -ResourceGroup TemplateTest -BillingPeriodName 2023
 
 
 #"spendingLimit": "CurrentPeriodOff"
-Invoke-AzRestMethod -SubscriptionId (Get-AzContext).Subscription.Id -ApiVersion "2022-12-01" -Method GET| select -ExpandProperty Content
+#Invoke-AzRestMethod -SubscriptionId (Get-AzContext).Subscription.Id -ApiVersion "2022-12-01" -Method GET| select -ExpandProperty Content
+(Invoke-AzRest -SubscriptionId (Get-AzContext).Subscription.Id -ApiVersion '2022-12-01').Content
