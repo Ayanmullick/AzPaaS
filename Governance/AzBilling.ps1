@@ -74,3 +74,8 @@ Get-AzResourceGroup|select -First 50 -Property ResourceGroupName,
 
 #Cost for one VM 
 Get-AzConsumptionUsageDetail -ResourceGroup TemplateTest -BillingPeriodName 20230901 -InstanceName centos| Measure-Object PretaxCost -Sum #BillingPeriodName corresponds to the month. Sept. 2023
+
+
+
+#"spendingLimit": "CurrentPeriodOff"
+Invoke-AzRestMethod -SubscriptionId (Get-AzContext).Subscription.Id -ApiVersion "2022-12-01" -Method GET| select -ExpandProperty Content
