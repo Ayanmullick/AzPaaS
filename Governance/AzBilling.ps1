@@ -24,6 +24,23 @@ New-AzSubscription -OfferType 'MS-AZR-0017P' -Name 'AzSQL_PoC' -EnrollmentAccoun
 #endregion
 
 
+#region Find Billing Account of Existing Subscription 
+$Context = Get-AzContext
+$Path = "/subscriptions/$($Context.Subscription.Id)/providers/Microsoft.Billing/billingProperty/default?api-version=2024-04-01"
+$BillingProperty = (Invoke-AzRestMethod -Method GET -Path $Path -ErrorAction Stop).Content | ConvertFrom-Json
+[pscustomobject]@{
+     SubscriptionName         = $Context.Subscription.Name
+     SubscriptionId           = $Context.Subscription.Id
+     BillingAccountId         = $BillingProperty.properties.billingAccountId.Split('/')[-1]
+     BillingAccountName       = $BillingProperty.properties.billingAccountDisplayName
+     AgreementType            = $BillingProperty.properties.billingAccountAgreementType
+     BillingAccountResourceId = $BillingProperty.properties.billingAccountId
+ } | Format-List
+
+#Get-AzBillingProfile -BillingAccountName <>  #No profile for that account
+#endregion
+
+
 
 
 #region create budget for resource group
