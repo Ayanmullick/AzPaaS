@@ -1,64 +1,4 @@
-﻿New-AzQuota in the Az.Quota module doesn't work for Cosmos. PFB PowerShell workaround using Az.Support module.
-
-New-AzCosmosDBAccount doesn't work for 'Serverless' accounts. PFB workaround using Az.Resource module.
-
-
-
-
-$resourceGroupName = "myResourceGroup"
-$accountName = "mycosmosaccount"
-$apiKind = "Sql"
-$consistencyLevel = "BoundedStaleness"
-$maxStalenessInterval = 300
-$maxStalenessPrefix = 100000
-$locations = @()
-$locations += New-AzCosmosDBLocationObject -LocationName "East US" -FailoverPriority 0 -IsZoneRedundant 0
-$locations += New-AzCosmosDBLocationObject -LocationName "West US" -FailoverPriority 1 -IsZoneRedundant 0
-
-New-AzCosmosDBAccount `
-    -ResourceGroupName cosmos `
-    -LocationObject $locations `
-    -Name $accountName `
-    -ApiKind $apiKind `
-    -EnableAutomaticFailover:$true `
-    -DefaultConsistencyLevel $consistencyLevel `
-    -MaxStalenessIntervalInSeconds $maxStalenessInterval `
-    -MaxStalenessPrefix $maxStalenessPrefix
-
-
-New-AzCosmosDBAccount -Location SouthCentralUS -ResourceGroupName cosmos -Name Ztechlower -ApiKind Sql -EnableAutomaticFailover  -DefaultConsistencyLevel Session -MaxStalenessIntervalInSeconds 5 -MaxStalenessPrefix 100 -Verbose
-
-#Serverless deployment mode not exposed thru API
-New-AzCosmosDBAccount -Location SouthCentralUS -ResourceGroupName cosmos -Name ztechlower -ApiKind Sql -DefaultConsistencyLevel Session -MaxStalenessIntervalInSeconds 5 -MaxStalenessPrefix 100 -Verbose
-
-$resourceGroupName = "myResourceGroup"
-$accountName = "mycosmosaccount"
-$databaseName = "myDatabase"
-
-New-AzCosmosDBSqlDatabase -ResourceGroupName cosmos -AccountName ztechlower -Name ztechlower1 -Throughput 
-
-
-#Properties for a default deployment
-"properties": {
-                "publicNetworkAccess": "Enabled",
-                "enableAutomaticFailover": false,
-                "enableMultipleWriteLocations": false,
-                "isVirtualNetworkFilterEnabled": false,
-                "virtualNetworkRules": [],
-                "disableKeyBasedMetadataWriteAccess": false,
-                "enableFreeTier": false,
-                "enableAnalyticalStorage": false,
-                "createMode": "Default",
-                "databaseAccountOfferType": "Standard",
-                "consistencyPolicy": {
-                    "defaultConsistencyLevel": "Session",
-                    "maxIntervalInSeconds": 5,
-                    "maxStalenessPrefix": 100
-                }
-
-Get-CosmosDbOffer -Context $cosmosDbContext
-
-#region Still thick provisions. EnableServerless doesn't work 
+﻿#region Still thick provisions. EnableServerless doesn't work 
 
 New-AzCosmosDBAccount -ResourceGroupName cosmos -Location EastUS -Name ayan -Capabilities {EnableServerless} -EnableFreeTier $true `
     -ApiKind GlobalDocumentDB -DefaultConsistencyLevel Session -EnableAutomaticFailover:$true -PublicNetworkAccess Enabled -MinimalTlsVersion Tls12
@@ -69,8 +9,23 @@ $Params =    @{ResourceGroupName  = 'cosmos'; Location = 'EastUS'}
 #endregion    
 
 
-#Az.Cosmosdb module blocked by:  https://github.com/Azure/azure-powershell/issues/20836
-#region -Failed in NorthCentralUS. Worked in EastUS
+#region Az.Cosmosdb module blocked by:  https://github.com/Azure/azure-powershell/issues/20836
+$Params = @{ResourceGroupName = 'cosmos'; Location = 'NorthCentralUS'; Name = 'ayan'}
+$AccountParams = @{ ResourceType = 'Microsoft.DocumentDB/databaseAccounts'; ApiVersion = '2026-04-01-preview'; Kind = 'GlobalDocumentDB'}
+
+$CosmosProps = @{
+    databaseAccountOfferType = 'Standard'; capacityMode = 'Serverless'; enableFreeTier = $false
+    enableAutomaticFailover = $false; minimalTlsVersion = 'Tls12'; publicNetworkAccess = 'Enabled'
+    locations = @(@{locationName = $Params.Location; failoverPriority = 0; isZoneRedundant = $false})
+    consistencyPolicy = @{defaultConsistencyLevel = 'Session'; maxIntervalInSeconds = 5; maxStalenessPrefix = 100}
+}
+
+New-AzResource @Params @AccountParams -PropertyObject $CosmosProps -Force -Verbose
+
+
+
+
+
 
 $Params =    @{ResourceGroupName  = 'cosmos'; Location = 'EastUS'}
 $AccountResource = @{ResourceType= 'Microsoft.DocumentDB/databaseAccounts'; ApiVersion= '2025-05-01-preview'; Kind= 'GlobalDocumentDB'}
